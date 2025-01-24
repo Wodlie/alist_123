@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"sync"
 	"time"
-	"golang.org/x/time/rate"
 
 	"golang.org/x/time/rate"
 
