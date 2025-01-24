@@ -199,6 +199,7 @@ func (d *Pan123) login() error {
 //	return &authKey, nil
 //}
 
+
 // 解密 params 并重构下载链接
 func decodeAndModifyURL(originalURL string) (string, error) {
 	parsedURL, err := url.Parse(originalURL)
@@ -237,7 +238,9 @@ func decodeAndModifyURL(originalURL string) (string, error) {
 	return parsedURL.String(), nil
 }
 
-func (d *Pan123) request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+func (d *Pan123) Request(url string, method string, callback base.ReqCallback, resp interface{}) ([]byte, error) {
+	isRetry := false
+do:
 	req := base.RestyClient.R()
 	req.SetHeaders(map[string]string{
 		"origin":        "https://www.123pan.com",
@@ -274,11 +277,13 @@ func (d *Pan123) request(url string, method string, callback base.ReqCallback, r
 
 	code := int(result["code"].(float64))
 	if code != 0 {
-		if code == 401 {
-			if err := d.login(); err != nil {
+		if !isRetry && code == 401 {
+			err := d.login()
+			if err != nil {
 				return nil, err
 			}
-			return d.request(url, method, callback, resp)
+			isRetry = true
+			goto do
 		}
 		return nil, errors.New(result["message"].(string))
 	}
@@ -333,7 +338,7 @@ func (d *Pan123) getFiles(ctx context.Context, parentId string, name string) ([]
 			"operateType":          "4",
 			"inDirectSpace":        "false",
 		}
-		_res, err := d.request(FileList, http.MethodGet, func(req *resty.Request) {
+		_res, err := d.Request(FileList, http.MethodGet, func(req *resty.Request) {
 			req.SetQueryParams(query)
 		}, &resp)
 		if err != nil {

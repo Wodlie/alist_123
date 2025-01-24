@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"sync"
 	"time"
+
 	"golang.org/x/time/rate"
 
 	"github.com/alist-org/alist/v3/drivers/base"
@@ -82,7 +83,6 @@ func (d *Pan123) Link(ctx context.Context, file model.Obj, args model.LinkArgs) 
 			"type":      f.Type,
 		}
 		resp, err := d.Request(DownloadInfo, http.MethodPost, func(req *resty.Request) {
-			
 			req.SetBody(data).SetHeaders(headers)
 		}, nil)
 		if err != nil {
